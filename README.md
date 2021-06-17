@@ -6,7 +6,7 @@ This demo is built from five parts:
 * GCP Dialogflow Agent ([this is online](https://dialogflow.cloud.google.com/#/agent/development-194922/intents)) : https://dialogflow.cloud.google.com/#/agent/development-194922/intents
     * This handles all of the natural language processing, and the flow of the conversation
 * Demo Frontend (`/demo-frontend`) : A React frontend chat interface
-    * This is what the user writes into and where the Dialogflow responses are displayed
+    * This provides a GUI that takes user input and returns responses from the chat bot
 * Demo Server  (`/demo-server`) : A simple Golang api / file server
     * This server has two purposes
         1) Serve the built react frontend files
@@ -19,11 +19,11 @@ This demo is built from five parts:
 ## More detail on demo parts
 
 #### GCP Dialogflow Agent 
-This is responsible for the intent and dialogue of this demo. This is a google cloud system/service that can direct you to different messages depending on the set context and input message. Below are some points:
+This is responsible for the intent and dialogue of this demo. This is a Google Cloud system/service that can direct you to different messages depending on the set context and input message. Below are some points:
 * A dialogflow agent is built up of many things, but for this demo we are using `entities`, `intents`, `context`, and `fulfilment`.
-* Intents: are the intention state of a user. It requires two things to trigger: For the input text to be similar to the `training phrases` and for the input `context` to match. Once an intent is triggered it can do one or all of these things: create `output context`, extract values from user input and save to `entities`, respond to the user with text, or use execute a `cloud function`.
+* Intents: are the intention state of a user. It requires two things to trigger: For the input text to be similar to the `training phrases` and for the input `context` to match. Once an intent is triggered it can do one or all of these things: create `output context`, extract values from user input and save to `entities`, respond to the user with text, or execute a `cloud function`.
     * `training phrases` - These are simply plain text that an `intent` will use to trigger.
-        * Example: A simple intent that is trigger when the user says what aws zone he wants to deploy to, and then asks for which machine type to deploy: 
+        * Example: A simple intent that is triggered when the user says what aws zone he wants to deploy to, and then asks for which machine type to deploy: 
         * Intent: AWS1_User_Input_Zone
         * Input Context: aws, aws_input_zone
         * Output Context: aws, aws_machine_type, selected-provider
@@ -39,22 +39,22 @@ This is responsible for the intent and dialogue of this demo. This is a google c
     * Values: [{list of all aws zones }]
     * Extra Options: Allow for fuzzy matching
     * So using the example above if the user inputted 'US East 1' it would match with the `aws-deploy-zone` entity with the value `us-east-1`. We can then save this to a context to use in a future intent.
-* Context: Every `intent` can have input context that is required to trigger the intent, and output context which is used to control the contexts after this intent. Contexts are very useful and control the flow of `intents` in this demo. Using input and output contexts you can control the order of `intent` to give the user a fake sense of a conversation. Contexts are also used to store entities; Think of contexts as also a dictionary where you can store extracted entities. For this demo, all provisioning data/options are saved to the `gcp` and `aws` context.
+* Context: Every `intent` can have input context that is required to trigger the intent, and output context which is used to control the contexts after this intent. Contexts are very useful and control the flow of `intents` in this demo. Using input and output context, you can control the order of `intent` to give the user a fake sense of a conversation. Contexts are also used to store entities; Think of contexts as also a dictionary where you can store extracted entities. For this demo, all provisioning data/options are saved to the `gcp` and `aws` context.
 A context also has a lifetime so it will disappear after a certain amount of `intents` are triggered. However, this can be increased or decreased during any intent.
 
 #### Demo Frontend 
-This is a very simple frontend, all it does is act as a client GUI for the  Dialogflow agent. However, it does have one `important` feature: All parts in this demo rely on a `session-id` to communicate and operate on the correct Dialogflow session. This `session-id` can be anything and is created by the frontend in this demo, it is simply a uuid. Once generated, the `session-id` is passed to the `demo-server` `/init` path which will start the demo and save the `session-id` to the Dialogflow `sessionid` context.
+This is a very simple frontend, all it does is act as a client GUI for the  Dialogflow agent. However, it does have one `important` feature: all parts in this demo rely on a `session-id` to communicate and operate on the correct Dialogflow session. This `session-id` can be anything and is created by the frontend in this demo, it is simply a uuid. Once generated, the `session-id` is passed to the `demo-server` `/init` path which will start the demo and save the `session-id` to the Dialogflow `sessionid` context.
 
 #### Demo Server
 This server does two things:
 ##### 1) React Web Server
-Serve the built frontent web files. This handler occurs on any path that is not any of the reserved paths. Nice and simple.
+Serves the built frontent web files. This handler occurs on any path that is not any of the reserved paths. Nice and simple.
 
 ##### 2) Dialogflow API
 
-Dialogflow requires certain gcp permissions communicate with an agent, so this api authenicates with a dialogflow agent and exposes some its functionality so that frontend can use it as a client. 
+Dialogflow requires certain Google Cloud Platform permissions to communicate with an agent. This API authenicates with a Dialogflow agent and exposes some its functionality so that frontend can use it as a client. 
 
-All routes on this api require a session id in the path so that it knows what dialogflow session to communcate with.
+All routes on this API require a session ID in the path so that it knows what Dialogflow session to communcate with.
 
 The routes are:
 * GET - /{sessionID}/dialogFlow/init"
