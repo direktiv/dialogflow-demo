@@ -69,7 +69,12 @@ The routes are:
 
 #### Demo Context App
 
-
+This is a super simple direktiv app, that unfortunately is somwhat requried. All is it saves a string value to a context in a Dialogflow session. We need this so that the output of creating a gcp or aws on Direktiv can be posted back to a Dialogflow session.
 #### The Direktiv Cloud Event Workflow
 
+This is the workflow that is used as a cloud event on direktiv. Its very simple and only has two steps:
+1. A switch state(`id=init`) that will either create a `aws` or `gcp` instance. This depends on whether `.dialogFlowEvent.gcp` or `.dialogFlowEvent.aws` is set. Note: `.dialogFlowEvent.gcp` and `.dialogFlowEvent.aws` are created from the `gcp` and `aws` contexts from Dialogflow.
+2. A action state (`id=post-context`) will post the `.return` value from the previous state back to the DialogFlow.
 
+
+#### The Dialogflow Cloud function
