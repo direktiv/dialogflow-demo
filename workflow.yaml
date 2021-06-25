@@ -1,0 +1,74 @@
+id: dialogflow-cloud-webhook
+functions:
+- id: gcp-cli
+  image: vorteil/gcloud:v2
+  size: medium
+- id: create-context
+  image: jkizo/dialog-flow-client:v2
+- id: aws-create-instance
+  image: vorteil/aws-ec2-create:v2
+  size: medium
+description: "Invokes a cloud function based on the given details"
+start:
+  type: event
+  state: "init"
+  event:
+    type: dialogFlowEvent
+states:
+  - id: init
+    type: switch
+    conditions:
+    - condition: '.dialogFlowEvent.gcp != null'
+      transition: run-gcp
+    - condition: '.dialogFlowEvent.aws != null'
+      transition: run-aws
+    defaultTransition: run-gcp
+  - id: run-gcp
+    type: action
+    transition: post-context
+    action:
+      secrets: ["SERVICE_ACCOUNT_KEY", "GCP_PROJECT"]
+      function: gcp-cli
+      input: |
+        {
+           "project": .secrets.GCP_PROJECT,
+           "serviceAccountKey": .secrets.SERVICE_ACCOUNT_KEY | tostring,
+           "command":[
+              "compute",
+              "instances",
+              "create",
+              (.dialogFlowEvent.gcp.parameters.["gcp-name"]),
+              ("--image-project=" + .secrets.GCP_PROJECT),
+              ("--zone=" + .dialogFlowEvent.gcp.parameters.["gcp-regions"]),
+              ("--machine-type=" + .dialogFlowEvent.gcp.parameters.["gcp-machine-type"]),
+              ("--image=" + .dialogFlowEvent.gcp.parameters.["gcp-image"])
+           ]
+        }
+  - id: run-aws
+    type: action
+    transition: post-context
+    action:
+      secrets: ["ACCESS_KEY", "ACCESS_SECRET"]
+      function: aws-create-instance
+      input: |
+        {
+          "access-key": .secrets.ACCESS_KEY,
+          "access-secret": .secrets.ACCESS_SECRET,
+          "image-id": .dialogFlowEvent.aws.parameters.["aws-ami-id"] | tostring,
+          "region": .dialogFlowEvent.aws.parameters.["aws-deploy-zone"] | tostring,
+          "instance-type": .dialogFlowEvent.aws.parameters.["aws-instance-type"] | tostring,
+        }
+  - id: post-context
+    type: action
+    action:
+      secrets: ["SERVICE_ACCOUNT_KEY", "GCP_PROJECT"]
+      function: create-context
+      input: |
+        {
+           "projectID": .secrets.GCP_PROJECT,
+           "serviceAccountKey": .secrets.SERVICE_ACCOUNT_KEY | tostring,
+           "sessionID": .dialogFlowEvent.sessionid.parameters.["sessionid"] | tostring,
+           "contextID": "output",
+           "lifespanCount": 50,
+           "contextValue": .return | tostring
+        }

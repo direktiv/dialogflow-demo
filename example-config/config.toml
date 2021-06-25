@@ -1,0 +1,4 @@
+port = 8181 # Port to host api / web server
+project = "" # GCP project id where dialogflow agent is
+key = "example-config/key.json" # Path to gcp service account key
+web-files-path = "build/build"
